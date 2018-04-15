@@ -44,6 +44,7 @@ class TcpClient:
             raise TypeError('Invalid timeout type: {}'.format(type(timeout)))
 
     def _recreate_socket(self, mode):
+        self.close()
         if self.proxy is None:
             self._socket = socket.socket(mode, socket.SOCK_STREAM)
         else:
@@ -87,9 +88,12 @@ class TcpClient:
                 if e.errno in (errno.EBADF, errno.ENOTSOCK, errno.EINVAL,
                                errno.ECONNREFUSED,  # Windows-specific follow
                                getattr(errno, 'WSAEACCES', None)):
-                    # Bad file descriptor, i.e. socket was closed, set it
-                    # to none to recreate it on the next iteration
-                    self._socket = None
+                    # Bad file descriptor, i.e. socket was closed.
+                    # Close it again just in case since some people
+                    # might get "OSError: [Errno 24] Too many open files"
+                    # when creating a new socket.socket(...) instead
+                    # simply setting it to ``None``.
+                    self.close()
                     time.sleep(timeout)
                     timeout = min(timeout * 2, MAX_TIMEOUT)
                 else:
