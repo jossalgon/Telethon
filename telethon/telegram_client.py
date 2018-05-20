@@ -2222,7 +2222,7 @@ class TelegramClient(TelegramBareClient):
 
             progress_callback (`callable`, optional):
                 A callback function accepting two parameters:
-                ``(downloaded bytes, total)``. Note that the
+                ``(downloaded bytes, total, filename)``. Note that the
                 ``total`` is the provided ``file_size``.
         """
         if not part_size_kb:
@@ -2297,7 +2297,7 @@ class TelegramClient(TelegramBareClient):
                 f.write(result.bytes)
                 __log__.debug('Saved %d more bytes', len(result.bytes))
                 if progress_callback:
-                    progress_callback(f.tell(), file_size)
+                    progress_callback(f.tell(), file_size, f.name)
         finally:
             if client != self:
                 client.disconnect()
